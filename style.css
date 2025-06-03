@@ -1,0 +1,364 @@
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh; 
+    overflow-x: hidden; 
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    width: 100%;
+    padding: 15px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-container {
+    display: flex;
+    flex-wrap: nowrap; 
+    justify-content: center;
+    gap: 20px;
+    padding: 15px;
+    width: 100%;
+    max-width: 1600px; /* Or your preferred max width */
+    box-sizing: border-box;
+    flex-grow: 1; 
+    overflow: hidden; 
+}
+
+/* Columns */
+.simulation-plot-column,
+.controls-info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* THIS IS THE MOST CRITICAL VALUE TO ADJUST MANUALLY: */
+    /* Sum: header height + .main-container (top+bottom padding) + site-footer height + copyright-footer height */
+    /* Example: If Header=60, MainPad=30, SiteFooter=45, CopyrightFooter=25, then Total = 160px */
+    max-height: calc(100vh - 160px); /* <<< ADJUST THIS 160px VALUE!!! */
+    overflow-y: auto; 
+    padding-bottom: 5px; 
+    padding-right: 5px; /* For scrollbar, adjust if using custom scrollbars */
+}
+
+.simulation-plot-column {
+    flex: 0 0 60%; /* Adjust as needed, e.g., 55% if Pong canvas is wider */
+    max-width: 60%;
+}
+
+.controls-info-column {
+    flex: 0 0 38%; /* Ensure total flex-basis with gap is around 100% or slightly less */
+    max-width: 38%;
+}
+
+.card {
+    background-color: white;
+    padding: 15px; 
+    padding-bottom: 5px; /* Reduce bottom if .canvas-controls is inside and has its own padding */
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    text-align: left;
+    flex-shrink: 0; 
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.4em; 
+    position: sticky; 
+    top: -15px; /* Should be negative of the card's padding-top */  
+    background-color: white; 
+    z-index: 10;     
+    padding-top: 15px; 
+    margin-left: -15px; 
+    margin-right: -15px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+#simulation-container, #plot-container {
+    text-align: center;
+}
+
+canvas { /* General canvas styling */
+    border: 1px solid #ddd;
+    background-color: #fdfdfd; /* Default if not overridden by specific canvas */
+    display: block;
+    margin: 0 auto 10px auto; 
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+#pong-canvas { /* Specific styling for Pong canvas */
+    border: 1px solid #333; /* Darker border for game area */
+    background-color: #000000; /* Black background for Pong */
+}
+
+.canvas-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; 
+    margin-top: 10px;
+    padding: 10px 8px; /* Added more top/bottom padding */
+    background-color: #f8f9fa; /* Light background for controls area */
+    border-top: 1px solid #eee;
+    border-radius: 0 0 6px 6px; /* Match card radius if card padding-bottom is 0 */
+    z-index: 5; /* Below sticky card title */
+}
+
+.canvas-controls label {
+    font-size: 0.85em;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.canvas-controls input[type="range"] {
+    width: 70%; 
+    max-width: 220px;
+    cursor: pointer;
+}
+
+.canvas-controls button { /* Style for copy button or other canvas utility buttons */
+    padding: 6px 12px;
+    font-size: 0.8em;
+    background-color: #6c757d; 
+    text-transform: none; 
+    font-weight: normal; /* Override general button boldness if desired */
+    letter-spacing: normal; /* Override general button letter-spacing */
+}
+
+.canvas-controls button:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.status-display {
+    margin-top: 10px; 
+    font-size: 0.9em;
+    color: #555;
+    text-align: center;
+}
+.status-display span { /* For values within status display */
+    font-weight: bold;
+}
+
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px; 
+    flex-wrap: wrap;
+    justify-content: center; 
+}
+
+button { /* General action buttons */
+    font-family: 'Roboto', sans-serif;
+    padding: 9px 16px; 
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #3498db; 
+    color: white;
+    font-size: 0.9em; 
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 500; 
+    letter-spacing: 0.25px; 
+    text-transform: uppercase; 
+}
+
+button:hover:not(:disabled) {
+    background-color: #2980b9; 
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); 
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+button:disabled {
+    background-color: #bdc3c7; 
+    color: #7f8c8d !important; 
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.options-group {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.options-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    color: #333;
+    margin-bottom: 5px; /* Space between checkbox and epsilon display */
+}
+.options-group p { /* For epsilon display */
+    margin: 5px 0 0 5px;
+    font-size: 0.9em;
+}
+#epsilon-value {
+    font-weight: bold;
+    color: #2980b9; 
+}
+
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); 
+    gap: 10px; 
+    font-size: 0.85em; 
+}
+
+.metrics-grid p { 
+    margin: 0; 
+    padding: 12px 10px; 
+    border-radius: 6px;
+    background-color: #ecf0f1; 
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #dce4e7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    color: #34495e; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center;   
+    text-align: center;    
+    min-height: 75px;  
+}
+
+.metrics-grid p strong { 
+    color: #2c3e50;      
+    display: block;        
+    margin-bottom: 4px;   
+    font-weight: 700;      
+    font-size: 0.9em;      
+    line-height: 1.2;      
+    text-transform: uppercase;
+    letter-spacing: 0.5px; 
+}
+
+.metrics-grid p span { 
+    font-size: 1.3em;      
+    font-weight: 500;      
+    color: inherit;        
+    line-height: 1.1;      
+}
+
+/* Educational Content Styling */
+#educational-content h3 { color: #3498db; margin-top: 15px; margin-bottom: 8px; font-size: 1.1em; }
+#educational-content p, 
+#educational-content ul, 
+#educational-content ol,
+#educational-content dl { margin-bottom: 12px; font-size: 0.9em; }
+#educational-content ul { padding-left: 20px; list-style-type: disc; }
+#educational-content ol { padding-left: 25px; list-style-type: decimal; }
+#educational-content li { margin-bottom: 4px; }
+#educational-content dl dt { font-weight: bold; color: #555; margin-top: 8px; }
+#educational-content dl dd { margin-left: 18px; margin-bottom: 4px; }
+#educational-content a { color: #2980b9; text-decoration: none; }
+#educational-content a:hover { text-decoration: underline; }
+
+
+/* Footers */
+.site-footer {
+    text-align: center;
+    padding: 12px; 
+    color: #7f8c8d;
+    font-size: 0.85em; 
+    width: 100%;
+    border-top: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    position: sticky;
+    /* Adjust bottom based on copyright footer's exact height */
+    bottom: 25px; /* Assuming copyright footer is ~25px high (padding + font) */
+    z-index: 999; 
+}
+
+.copyright-footer {
+    text-align: center;
+    padding: 6px; 
+    background-color: #2c3e50;
+    color: #bdc3c7;
+    font-size: 0.75em; 
+    width: 100%;
+    position: sticky;
+    bottom: 0;
+    z-index: 999;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .main-container {
+        flex-direction: column; 
+        overflow-y: auto; 
+        height: auto; 
+        padding-top: 10px; 
+        padding-bottom: 70px; /* Space for static footers */
+    }
+    .simulation-plot-column, .controls-info-column {
+        flex-basis: auto; 
+        max-width: 100%;
+        height: auto; 
+        overflow-y: visible; 
+        max-height: none; 
+        padding-right: 0; 
+        padding-bottom: 0; 
+    }
+     .card h2 {
+        position: static; 
+        /* Reset sticky title specific paddings/margins for static flow */
+        padding-top: 0; 
+        margin-left: 0; 
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+        /* Re-apply card's original top padding if needed, or it's fine as is */
+         padding-top: 15px; /* If card's padding was 15px */
+    }
+    header, .site-footer, .copyright-footer { 
+        position: static; 
+    }
+}
+
+@media (max-width: 768px) { 
+    header h1 { font-size: 1.5em; } 
+    header p { font-size: 0.9em; }
+    .metrics-grid { grid-template-columns: 1fr; } 
+    .card { padding: 12px; }
+    .card h2 { 
+        font-size: 1.2em; 
+        padding-top: 12px; 
+        /* When static, no negative margins needed for full-width background effect */
+    }
+    button { padding: 8px 14px; font-size: 0.85em; }
+    #educational-content p, 
+    #educational-content ul, 
+    #educational-content ol,
+    #educational-content dl { font-size: 0.85em; }
+}

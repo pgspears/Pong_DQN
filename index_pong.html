@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DQN Pong Agent - TensorFlow.js</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Deep Q-Network (DQN) Learns Pong</h1>
+        <p>Visualizing an AI agent learning to play Pong using TensorFlow.js</p>
+    </header>
+
+    <div class="main-container">
+        <div class="simulation-plot-column">
+            <section id="simulation-container" class="card">
+                <h2>Live Pong Game</h2>
+                <canvas id="pong-canvas" width="600" height="400"></canvas>
+                <div class="canvas-controls">
+                    <!-- Pong canvas height might be fixed, or add controls if desired -->
+                </div>
+                <p class="status-display">Status: <span id="status-message">Idle</span></p>
+                 <p class="status-display">Player Score: <span id="player-score">0</span> | Opponent Score: <span id="opponent-score">0</span></p>
+            </section>
+
+            <section id="plot-container" class="card">
+                <h2>Reward per Episode (Points Scored)</h2>
+                <canvas id="reward-plot-canvas" width="700" height="300"></canvas>
+                <div class="canvas-controls">
+                    <label for="plotHeightSlider">Plot Height: <span id="plotHeightValue">300</span>px</label>
+                    <input type="range" id="plotHeightSlider" min="200" max="500" value="300" step="10">
+                    <button id="copyPlotButton">Copy Plot</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="controls-info-column">
+            <div class="scrollable-content"> {/* This div was removed in some style.css versions, ensure consistency */}
+                                            {/* If .controls-info-column itself scrolls, this div is not needed. */}
+                                            {/* If this div is kept, .controls-info-column should not have overflow-y:auto */}
+                <section id="controls-metrics" class="card">
+                    <h2>Controls & Metrics</h2>
+                    <div class="button-group">
+                        <button id="startButton">Start Training</button>
+                        <button id="stopButton" disabled>Stop Training</button>
+                        <button id="runTrainedButton" disabled>Run Trained Agent</button>
+                    </div>
+                    <div class="button-group">
+                        <button id="saveAgentButton" disabled>Save Agent</button>
+                        <button id="loadAgentButton">Load Agent</button>
+                    </div>
+                    <div class="options-group">
+                        <label for="fastTrainingCheckbox">
+                            <input type="checkbox" id="fastTrainingCheckbox" checked> Fast Training (Less Vis)
+                        </label>
+                         <p>Epsilon: <span id="epsilon-value">1.00</span></p>
+                    </div>
+                    <div class="metrics-grid">
+                        <p id="metric-episode"><strong>Episode:</strong> <span id="episode-counter">0</span></p>
+                        <p id="metric-total-reward"><strong>Last Ep. Result:</strong> <span id="total-reward">0</span></p>
+                        <p id="metric-avg-reward"><strong>Avg. Reward (Last 100):</strong> <span id="avg-reward">0</span></p>
+                        <p id="metric-loss"><strong>Avg. Loss (Train Step):</strong> <span id="loss-value">-</span></p>
+                    </div>
+                </section>
+
+                <section id="educational-content" class="card">
+                    <h2>Understanding This DQN Pong Application</h2>
+                    <h3>What is Pong?</h3>
+                    <p>Pong is one of the earliest arcade video games. It's a simple 2D simulation of table tennis. Each player controls a paddle, moving it vertically on one side of the screen. A ball moves across the screen, and players must position their paddles to hit the ball back to the opponent. A point is scored if the opponent fails to return the ball.</p>
+
+                    <h3>Deep Q-Network (DQN) for Pong</h3>
+                    <p>This application uses a Deep Q-Network (DQN) to train an AI agent to play Pong. DQN is a powerful Reinforcement Learning algorithm that was famously used by DeepMind to play Atari games at a superhuman level by learning directly from pixel inputs (though this version uses a simplified state).</p>
+                    <h4>Core DQN Components:</h4>
+                    <ul>
+                        <li><strong>Q-Network (Online Network):</strong> A neural network that takes the game state as input (e.g., ball position/velocity, paddle positions) and outputs a Q-value for each possible action (move paddle up, down, or stay). The Q-value Q(s,a) represents the expected total future discounted reward if the agent takes action 'a' in state 's' and then follows the optimal policy thereafter.</li>
+                        <li><strong>Target Network:</strong> A periodically updated copy of the Q-Network. It's used to generate stable target values for training the Q-Network, preventing oscillations and improving learning stability.</li>
+                        <li><strong>Experience Replay:</strong> The agent stores its experiences (state, action, reward, next state, done) in a replay buffer. During training, random mini-batches of these experiences are sampled to update the Q-Network. This breaks correlations between consecutive experiences and allows for efficient reuse of past data.</li>
+                        <li><strong>Epsilon-Greedy Exploration:</strong> To balance exploration (trying new actions) and exploitation (choosing the best-known action), the agent uses an epsilon-greedy strategy. With probability epsilon (ε), it chooses a random action; otherwise, it chooses the action with the highest Q-value. Epsilon typically starts high and decays over time.</li>
+                    </ul>
+                    <h4>Learning Process:</h4>
+                    <p>The Q-Network is trained to satisfy the Bellman equation. The loss function is typically the Mean Squared Error (MSE) between the predicted Q-value Q(s,a) and the target Q-value, which is `r + γ * max_a' Q_target(s', a')`, where 'r' is the immediate reward, 'γ' is the discount factor, and `Q_target` comes from the target network.</p>
+
+                    <h3>Key Terms & Visualization</h3>
+                    <dl>
+                        <dt>State (s):</dt><dd>Vector: [ballX, ballY, ballSpeedX, ballSpeedY, playerPaddleY, opponentPaddleY], normalized.</dd>
+                        <dt>Action (a):</dt><dd>Move AI paddle: Stay (0), Up (1), Down (2).</dd>
+                        <dt>Reward (r):</dt><dd>+1 if opponent misses, -1 if AI misses, small +0.1 for hitting the ball.</dd>
+                        <dt>Q-value Q(s,a):</dt><dd>Predicted long-term reward for taking action 'a' in state 's'.</dd>
+                        <dt>Episode:</dt><dd>One point scored (ball goes off one side).</dd>
+                    </dl>
+                    <p>The <strong>Live Simulation</strong> shows the game. The <strong>Reward per Episode</strong> plot will show +1 or -1, indicating points. A positive **Average Reward** suggests the agent is winning more than losing.</p>
+                    
+                    <h3>Further Exploration</h3>
+                    <ul>
+                        <li>Original Atari DQN Paper (Mnih et al., 2013/2015).</li>
+                        <li>Advanced DQN variants: Double DQN, Dueling DQN, Prioritized Experience Replay.</li>
+                        <li>Policy Gradient methods (like REINFORCE or A2C/A3C) as an alternative to value-based DQN.</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>Built with JavaScript, TensorFlow.js, and HTML Canvas.</p>
+    </footer>
+    <div class="copyright-footer">
+        <p>© Patrick Spears 2025</p>
+    </div>
+
+    {/* Corrected Script Order */}
+    <script src="pong_env.js"></script> 
+    <script src="dqn_agent.js"></script>  
+    <script src="main_pong.js"></script> 
+</body>
+</html>
